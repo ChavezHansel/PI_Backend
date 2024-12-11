@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+export declare const changeAvilability: (req: Request, res: Response) => Promise<void>;
 export declare const getAllProducts: (req: Request, res: Response) => Promise<void>;
 export declare const getProductById: (req: Request, res: Response) => Promise<void>;
 export declare const createProduct: (req: Request, res: Response) => Promise<void>;

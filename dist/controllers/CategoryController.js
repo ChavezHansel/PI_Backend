@@ -14,7 +14,13 @@ const Category_1 = require("../models/Category");
 const Product_1 = require("../models/Product");
 const getAllCategories = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const categories = yield Category_1.Category.find().populate("parent", "name description");
+        const categories = yield Category_1.Category.find()
+            .populate("name description")
+            .lean();
+        for (let category of categories) {
+            const productCount = yield Product_1.Product.countDocuments({ category: category._id });
+            category.productCount = productCount;
+        }
         res.status(200).json(categories);
     }
     catch (error) {
@@ -134,6 +140,7 @@ const createCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
         res.status(201).json(savedCategory);
     }
     catch (error) {
+        console.log(error);
         res.status(500).json({
             message: "Error al crear la categoría.",
             error: error.message,
@@ -144,6 +151,7 @@ exports.createCategory = createCategory;
 const updateCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     const updateData = req.body;
+    console.log(updateData);
     try {
         if (updateData.parent) {
             const parentCategory = yield Category_1.Category.findById(updateData.parent);
@@ -164,6 +172,7 @@ const updateCategory = (req, res) => __awaiter(void 0, void 0, void 0, function*
             });
             return;
         }
+        updatedCategory.save();
         res.status(200).json(updatedCategory);
     }
     catch (error) {
@@ -177,6 +186,13 @@ exports.updateCategory = updateCategory;
 const deleteCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
+        const productsInCategory = yield Product_1.Product.countDocuments({ category: id });
+        if (productsInCategory > 0) {
+            res.status(400).json({
+                message: "No se puede eliminar la categoría porque tiene productos asociados.",
+            });
+            return;
+        }
         const deletedCategory = yield Category_1.Category.findByIdAndDelete(id);
         if (!deletedCategory) {
             res.status(404).json({

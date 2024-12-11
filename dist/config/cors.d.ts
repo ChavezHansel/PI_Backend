@@ -1,5 +1,2 @@
-export declare const corsConfig: {
-    origin: string;
-    methods: string[];
-    allowedHeaders: string[];
-};
+import { CorsOptions } from 'cors';
+export declare const corsConfig: CorsOptions;

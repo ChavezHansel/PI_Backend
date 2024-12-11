@@ -37,6 +37,7 @@ const express_1 = require("express");
 const userController = __importStar(require("../controllers/UserController"));
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
+router.patch("/update-profile", auth_1.verifyUserToken, userController.updateInformation);
 router.get("/", auth_1.verifyUserToken, userController.getAllUsers);
 router.get("/:id", auth_1.verifyUserToken, userController.getUserById);
 router.post("/", auth_1.verifyUserToken, userController.createUser);

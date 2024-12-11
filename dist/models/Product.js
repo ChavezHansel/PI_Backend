@@ -57,8 +57,10 @@ const ProductSchema = new mongoose_1.Schema({
         required: true,
     },
     specifications: {
-        type: Map,
-        of: String,
+        type: [{
+                key: { type: String, required: true },
+                value: { type: String, required: true }
+            }],
         required: false,
     },
     materials: {

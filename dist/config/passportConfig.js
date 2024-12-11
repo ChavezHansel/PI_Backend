@@ -11,7 +11,7 @@ passport_1.default.use(new GoogleStrategy({
     type: 'authorized_user',
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: 'http://localhost:3000/api/auth/google/callback',
+    callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`,
     redirect_uri: process.env.FRONTEND_URL,
     scope: ['profile', 'email']
 }, function verify(accessToken, refreshToken, profile, cb) {

@@ -48,12 +48,14 @@ const UserSchema = new mongoose_1.Schema({
         type: Boolean,
         default: false
     },
+    active: {
+        type: Boolean,
+        default: true
+    },
     isGoogleUser: { type: Boolean, default: false },
     address: {
         street: { type: String },
         city: { type: String },
-        zip: { type: String },
-        country: { type: String },
     },
 }, { timestamps: true });
 exports.User = mongoose_1.default.model("User", UserSchema);

@@ -17,16 +17,13 @@ const cartRoutes_1 = __importDefault(require("./routes/cartRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const priceRangeRoutes_1 = __importDefault(require("./routes/priceRangeRoutes"));
-const priceRangeSeed_1 = __importDefault(require("./seed/priceRangeSeed"));
 const express_session_1 = __importDefault(require("express-session"));
 dotenv_1.default.config();
 (0, db_1.connectDB)();
-//seedCategory();
-(0, priceRangeSeed_1.default)();
-//seedProduct();
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)(cors_2.corsConfig));
 app.use(express_1.default.json());
+app.use(express_1.default.urlencoded({ extended: true }));
 app.use((0, express_session_1.default)({
     secret: process.env.CLAVE_PASSPORT || 'sqeqwksdjjejnewqeqwdja',
     resave: false,

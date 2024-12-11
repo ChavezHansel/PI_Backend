@@ -5,6 +5,7 @@ export interface IUser extends Document {
     password: string;
     role: "admin" | "customer" | "employee";
     confirmed: boolean;
+    active: boolean;
     isGoogleUser: boolean;
     address?: {
         street: string;

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserRole = exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserById = exports.getAllUsers = void 0;
+exports.updateUserRole = exports.deleteUser = exports.updateUser = exports.updateInformation = exports.createUser = exports.getUserById = exports.getAllUsers = void 0;
 const User_1 = require("../models/User");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const getAllUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -88,6 +88,40 @@ const createUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.createUser = createUser;
+const updateInformation = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.user;
+    const { name, email, city, street } = req.body;
+    if (!name || !email) {
+        res.status(400).json({ message: "El nombre y el correo son obligatorios." });
+        return;
+    }
+    try {
+        const updatedUser = yield User_1.User.findByIdAndUpdate(id, {
+            name,
+            email,
+            address: {
+                street: street || "",
+                city: city || "",
+            },
+        }, { new: true, runValidators: true });
+        if (!updatedUser) {
+            res.status(404).json({ message: "Usuario no encontrado." });
+            return;
+        }
+        res.status(200).json({
+            message: "Usuario actualizado exitosamente.",
+            user: {
+                name: updatedUser.name,
+                email: updatedUser.email,
+                address: updatedUser.address,
+            },
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error interno del servidor." });
+    }
+});
+exports.updateInformation = updateInformation;
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     const { name, email, role } = req.body;

@@ -42,7 +42,7 @@ router.get("/store", categoryController.getCategoriesWithProducts);
 router.get("/top", categoryController.getTopCategories);
 router.get("/:id", categoryController.getCategoryById);
 router.post("/", categoryController.createCategory);
-router.put("/:id", categoryController.updateCategory);
+router.patch("/:id", categoryController.updateCategory);
 router.delete("/:id", auth_1.verifyUserToken, categoryController.deleteCategory);
 exports.default = router;
 //# sourceMappingURL=categoryRoutes.js.map

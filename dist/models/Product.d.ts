@@ -11,13 +11,17 @@ interface IProduct extends Document {
     images: string[];
     category: Types.ObjectId;
     variations: IVariation[];
-    specifications: Record<string, string>;
+    specifications: ISpecification[];
     materials: string[];
     reviews: IReview[];
     discount: number;
     isActive: boolean;
     createdAt?: Date;
     updatedAt?: Date;
+}
+interface ISpecification {
+    key: string;
+    value: string;
 }
 interface IVariation {
     color: string;

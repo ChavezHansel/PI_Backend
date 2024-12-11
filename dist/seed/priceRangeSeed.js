@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const PriceRange_1 = require("../models/PriceRange"); // Asegúrate de tener el modelo correcto importado
+const PriceRange_1 = require("../models/PriceRange");
 const priceRangesData = [
     { name: "0 - 100", minPrice: 0, maxPrice: 100 },
     { name: "101 - 500", minPrice: 101, maxPrice: 500 },

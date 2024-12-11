@@ -25,7 +25,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(
     session({
-        secret: process.env.CLAVE_PASSPORT||'sqeqwksdjjejnewqeqwdja',
+        secret: process.env.CLAVE_PASSPORT,
         resave: false,
         saveUninitialized: true,
     })

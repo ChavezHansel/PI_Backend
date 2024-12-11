@@ -19,16 +19,43 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getFilterOptions = exports.filterProducts = exports.getProductsByCategory = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductById = exports.getAllProducts = void 0;
+exports.getFilterOptions = exports.filterProducts = exports.getProductsByCategory = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductById = exports.getAllProducts = exports.changeAvilability = void 0;
 const Product_1 = require("../models/Product");
 const Category_1 = require("../models/Category");
 const PriceRange_1 = require("../models/PriceRange");
+const multer_1 = __importDefault(require("multer"));
+const multer_s3_1 = __importDefault(require("multer-s3"));
+const aws_1 = require("../config/aws");
+const changeAvilability = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body;
+        const product = yield Product_1.Product.findByIdAndUpdate(id, { isActive }).select("-__v -materials -reviews -createdAt -updatedAt");
+        if (!product) {
+            res.status(404).json({
+                message: "Producto no encontrado.",
+            });
+            return;
+        }
+        res.status(200).json(product);
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Error al obtener los productos.",
+            error: error.message,
+        });
+    }
+});
+exports.changeAvilability = changeAvilability;
 const getAllProducts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const products = yield Product_1.Product.find()
             .populate("category", "name description")
-            .select("-__v");
+            .select("-__v -materials -reviews -createdAt").sort({ name: 1 });
         res.status(200).json(products);
     }
     catch (error) {
@@ -42,7 +69,7 @@ exports.getAllProducts = getAllProducts;
 const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     try {
-        const product = yield Product_1.Product.findById(id).populate("category", "name description");
+        const product = yield Product_1.Product.findById(id).populate("category", "name description").select("-__v -reviews -createdAt");
         if (!product) {
             res.status(404).json({
                 message: "Producto no encontrado.",
@@ -60,14 +87,23 @@ const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.getProductById = getProductById;
 const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, description, price, images, category } = req.body;
-    try {
-        const existingCategory = yield Category_1.Category.findById(category);
-        if (!existingCategory) {
-            res.status(404).json({
-                message: "La categoría proporcionada no existe.",
+    upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
+        if (err) {
+            res.status(500).json({
+                message: 'Error al subir las imágenes.',
+                error: err.message,
             });
             return;
+        }
+        const { name, description, price, category, variations, specifications, materials, discount, isActive } = req.body;
+        const images = Array.isArray(req.files)
+            ? req.files.map((file) => file.location)
+            : [];
+        const existingCategory = yield Category_1.Category.findById(category);
+        if (!existingCategory) {
+            return res.status(404).json({
+                message: 'La categoría proporcionada no existe.',
+            });
         }
         const newProduct = new Product_1.Product({
             name,
@@ -75,49 +111,75 @@ const createProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             price,
             images,
             category,
+            variations: variations || [],
+            specifications: specifications || [],
+            materials: materials || [],
+            discount: discount || 0,
+            isActive: isActive !== undefined ? isActive : true,
         });
         const savedProduct = yield newProduct.save();
-        res.status(201).json(savedProduct);
-    }
-    catch (error) {
-        res.status(500).json({
-            message: "Error al crear el producto.",
-            error: error.message,
-        });
-    }
+        return res.status(201).json(savedProduct);
+    }));
 });
 exports.createProduct = createProduct;
 const updateProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
-    const updateData = req.body;
-    try {
-        if (updateData.category) {
-            const existingCategory = yield Category_1.Category.findById(updateData.category);
-            if (!existingCategory) {
-                res.status(400).json({
-                    message: "La categoría proporcionada no existe.",
-                });
-                return;
-            }
-        }
-        const updatedProduct = yield Product_1.Product.findByIdAndUpdate(id, updateData, {
-            new: true,
-            runValidators: true,
-        });
-        if (!updatedProduct) {
-            res.status(404).json({
-                message: "Producto no encontrado.",
+    upload(req, res, (err) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("updateData", req.body);
+        if (err) {
+            return res.status(500).json({
+                message: 'Error al subir las imágenes.',
+                error: err.message,
             });
-            return;
         }
-        res.status(200).json(updatedProduct);
-    }
-    catch (error) {
-        res.status(500).json({
-            message: "Error al actualizar el producto.",
-            error: error.message,
-        });
-    }
+        const images = Array.isArray(req.files)
+            ? req.files.map((file) => file.location)
+            : [];
+        try {
+            const updateData = req.body;
+            if (updateData.category) {
+                const existingCategory = yield Category_1.Category.findById(updateData.category);
+                if (!existingCategory) {
+                    return res.status(400).json({
+                        message: "La categoría proporcionada no existe.",
+                    });
+                }
+            }
+            const productToUpdate = yield Product_1.Product.findById(id);
+            if (!productToUpdate) {
+                return res.status(404).json({
+                    message: "Producto no encontrado.",
+                });
+            }
+            const existingImages = updateData.existingImages ? updateData.existingImages : [];
+            if (!Array.isArray(existingImages)) {
+                return res.status(400).json({
+                    message: "El formato de las imágenes existentes no es válido.",
+                });
+            }
+            updateData.images = [...existingImages, ...images];
+            delete updateData.existingImages;
+            const updatedProduct = yield Product_1.Product.findByIdAndUpdate(id, updateData, {
+                new: true,
+                runValidators: true,
+            });
+            if (!updatedProduct) {
+                return res.status(404).json({
+                    message: "Producto no encontrado después de la actualización.",
+                });
+            }
+            console.log("updateData", updateData);
+            console.log(updatedProduct);
+            res.status(200).json(updatedProduct);
+        }
+        catch (error) {
+            console.log(error);
+            res.status(500).json({
+                message: "Error al actualizar el producto.",
+                error: error.message,
+            });
+        }
+    }));
 });
 exports.updateProduct = updateProduct;
 const deleteProduct = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -235,4 +297,18 @@ const getFilterOptions = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.getFilterOptions = getFilterOptions;
+const upload = (0, multer_1.default)({
+    storage: (0, multer_s3_1.default)({
+        s3: aws_1.s3,
+        bucket: process.env.AWS_S3_BUCKET_NAME,
+        acl: "public-read",
+        metadata: (req, file, cb) => {
+            cb(null, { fieldName: file.fieldname });
+        },
+        key: (req, file, cb) => {
+            const fileName = `${Date.now()}-${file.originalname}`;
+            cb(null, fileName);
+        },
+    }),
+}).array("images");
 //# sourceMappingURL=ProductController.js.map

@@ -194,10 +194,12 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         const token = (0, jwt_1.generateJWT)({ id: user._id.toString() });
         res.status(200).json({
+            token,
             _id: user._id,
             name: user.name,
             email: user.email,
-            token,
+            address: user.address,
+            role: user.role
         });
     }
     catch (error) {
@@ -209,16 +211,16 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.loginUser = loginUser;
 const updateCurrentUserPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { current_password, password } = req.body;
+    const { currentPassword, newPassword } = req.body;
     const user = yield User_1.User.findById(req.user.id);
-    const isPasswordCorrect = yield (0, auth_1.checkPassword)(current_password, user.password);
+    const isPasswordCorrect = yield (0, auth_1.checkPassword)(currentPassword, user.password);
     if (!isPasswordCorrect) {
         const error = new Error("El Password actual es incorrecto");
         res.status(401).json({ error: error.message });
         return;
     }
     try {
-        user.password = yield (0, auth_1.hashPassword)(password);
+        user.password = yield (0, auth_1.hashPassword)(newPassword);
         yield user.save();
         res.status(200).json({
             message: "El Password se modificó correctamente.",

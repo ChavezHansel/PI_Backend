@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyUserToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = require("../models/User");
+require("multer");
 const verifyUserToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const bearer = req.headers.authorization;
     if (!bearer) {
@@ -25,7 +26,7 @@ const verifyUserToken = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     try {
         const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         if (typeof decoded === "object" && decoded.id) {
-            const user = yield User_1.User.findById(decoded.id).select("_id name email");
+            const user = yield User_1.User.findById(decoded.id).select("_id name email role address");
             if (!user) {
                 res.status(401).json({ error: "Token No Válido" });
                 return;
